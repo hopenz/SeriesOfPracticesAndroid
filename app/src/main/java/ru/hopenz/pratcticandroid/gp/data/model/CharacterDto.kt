@@ -1,12 +1,14 @@
-package ru.hopenz.pratcticandroid.gp.presentation.model
+package ru.hopenz.pratcticandroid.gp.data.model
 
-data class CharacterUiModel(
-    val index: Int,
+import kotlinx.serialization.Serializable
+
+@Serializable
+data class CharacterDto(
     val fullName: String,
     val nickname: String? = null,
     val hogwartsHouse: String? = null,
     val interpretedBy: String? = null,
     val children: List<String> = emptyList(),
-    val imageUrl: String? = null,
+    val image: String? = null,
     val birthdate: String? = null
 )

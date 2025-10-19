@@ -5,6 +5,8 @@ import org.koin.android.ext.koin.androidContext
 import org.koin.android.ext.koin.androidLogger
 import org.koin.core.context.startKoin
 import ru.hopenz.pratcticandroid.di.mainModule
+import ru.hopenz.pratcticandroid.di.networkModules
+import ru.hopenz.pratcticandroid.di.potterFeatureModule
 
 class App : Application() {
     override fun onCreate() {
@@ -12,7 +14,7 @@ class App : Application() {
         startKoin {
             androidLogger()
             androidContext(this@App)
-            modules(mainModule)
+            modules(mainModule, networkModules, potterFeatureModule)
         }
     }
 }

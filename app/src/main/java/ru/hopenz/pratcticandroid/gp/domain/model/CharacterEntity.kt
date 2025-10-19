@@ -1,7 +1,7 @@
-package ru.hopenz.pratcticandroid.gp.presentation.model
+package ru.hopenz.pratcticandroid.gp.domain.model
 
-data class CharacterUiModel(
-    val index: Int,
+data class CharacterEntity(
+    val id: Int,
     val fullName: String,
     val nickname: String? = null,
     val hogwartsHouse: String? = null,
