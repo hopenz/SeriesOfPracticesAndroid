@@ -1,12 +1,12 @@
 package ru.hopenz.pratcticandroid.gp.presentation.model
 
+import ru.hopenz.pratcticandroid.gp.domain.model.CharacterEntity
+
 
 data class CharacterDetailsViewState(
     val isLoading: Boolean = false,
-    val character: CharacterUiModel? = null,
+    val character: CharacterEntity? = null,
+    val error: String? = null,
     val rating: Float = 0f,
-    val isFavorite: Boolean = false,
-    val error: String? = null
-) {
-    val userVoteVisible get() = rating != 0f
-}
+    val isFavorite: Boolean = false
+)
