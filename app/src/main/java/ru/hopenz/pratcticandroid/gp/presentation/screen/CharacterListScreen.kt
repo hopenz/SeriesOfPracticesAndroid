@@ -1,31 +1,49 @@
 package ru.hopenz.pratcticandroid.gp.presentation.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.HorizontalDivider
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Divider
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import org.koin.androidx.compose.koinViewModel
-import ru.hopenz.pratcticandroid.CharacterDetails
 import ru.hopenz.pratcticandroid.gp.presentation.model.CharacterListViewState
 import ru.hopenz.pratcticandroid.gp.presentation.model.CharacterUiModel
 import ru.hopenz.pratcticandroid.gp.presentation.viewModel.CharacterListViewModel
+import ru.hopenz.pratcticandroid.navigation.CharacterDetails
 import ru.hopenz.pratcticandroid.navigation.Route
+import ru.hopenz.pratcticandroid.navigation.Settings
 import ru.hopenz.pratcticandroid.navigation.TopLevelBackStack
 import ru.hopenz.pratcticandroid.uikit.FullscreenError
 import ru.hopenz.pratcticandroid.uikit.FullscreenLoading
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CharacterListScreen(
     topLevelBackStack: TopLevelBackStack<Route>,
@@ -37,21 +55,60 @@ fun CharacterListScreen(
         viewModel.loadCharacters(lang = "en")
     }
 
-    when (val s = state.state) {
-        is CharacterListViewState.State.Loading -> FullscreenLoading()
-        is CharacterListViewState.State.Error -> FullscreenError(
-            text = s.error,
-            retry = { viewModel.loadCharacters(lang = "en") }
-        )
-        is CharacterListViewState.State.Success -> {
-            LazyColumn {
-                items(s.data, key = { it.index }) { character ->
-                    CharacterListItem(
-                        character = character,
-                        onCharacterClick = {
-                            topLevelBackStack.add(CharacterDetails(character.index))
+    val hasSettings by viewModel.hasSettings.collectAsState(initial = false)
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Персонажи Гарри Поттера") },
+                actions = {
+                    Box(
+                        modifier = Modifier
+                            .wrapContentSize(Alignment.TopEnd)
+                    ) {
+                        IconButton(
+                            onClick = { topLevelBackStack.add(Settings) },
+                            modifier = Modifier.align(Alignment.Center)
+                        ) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Настройки")
                         }
-                    )
+
+                        if (hasSettings) {
+                            Box(
+                                modifier = Modifier
+                                    .size(15.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .align(Alignment.TopEnd)
+                                    .offset(x = 2.dp, y = (-2).dp)
+                            )
+                        }
+                    }
+                }
+            )
+        }
+    ) { padding ->
+        when (val s = state.state) {
+            is CharacterListViewState.State.Loading -> FullscreenLoading()
+            is CharacterListViewState.State.Error -> FullscreenError(
+                text = s.error,
+                retry = { viewModel.loadCharacters(lang = "en") }
+            )
+
+            is CharacterListViewState.State.Success -> {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
+                    items(s.data, key = { it.index }) { character ->
+                        CharacterListItem(
+                            character = character,
+                            onCharacterClick = {
+                                topLevelBackStack.add(CharacterDetails(character.index))
+                            }
+                        )
+                    }
                 }
             }
         }
@@ -92,6 +149,6 @@ fun CharacterListItem(
             )
         }
 
-        HorizontalDivider()
+        Divider()
     }
 }

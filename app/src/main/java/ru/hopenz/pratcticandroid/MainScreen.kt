@@ -1,16 +1,13 @@
 package ru.hopenz.pratcticandroid
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.navigation3.runtime.entryProvider
@@ -20,15 +17,20 @@ import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
 import ru.hopenz.pratcticandroid.gp.presentation.screen.CharacterDetailsScreen
 import ru.hopenz.pratcticandroid.gp.presentation.screen.CharacterListScreen
+import ru.hopenz.pratcticandroid.gp.presentation.screen.FavoritesScreen
+import ru.hopenz.pratcticandroid.gp.presentation.screen.SettingsScreen
 import ru.hopenz.pratcticandroid.gp.presentation.viewModel.CharacterDetailsViewModel
 import ru.hopenz.pratcticandroid.gp.presentation.viewModel.CharacterListViewModel
+import ru.hopenz.pratcticandroid.gp.presentation.viewModel.FavoritesViewModel
+import ru.hopenz.pratcticandroid.gp.presentation.viewModel.SettingsViewModel
+import ru.hopenz.pratcticandroid.navigation.CharacterDetails
+import ru.hopenz.pratcticandroid.navigation.Characters
+import ru.hopenz.pratcticandroid.navigation.Favorites
 import ru.hopenz.pratcticandroid.navigation.Route
+import ru.hopenz.pratcticandroid.navigation.Settings
 import ru.hopenz.pratcticandroid.navigation.TopLevelBackStack
 
-data object Characters : Route
-data object Faculties : Route
-data class CharacterDetails(val characterId: Int) : Route
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(topLevelBackStack: TopLevelBackStack<Route>) {
     val dialogStrategy = remember { DialogSceneStrategy<Route>() }
@@ -36,7 +38,7 @@ fun MainScreen(topLevelBackStack: TopLevelBackStack<Route>) {
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
-                listOf(Characters, Faculties).forEach { route ->
+                listOf(Characters, Favorites).forEach { route ->
                     NavigationBarItem(
                         icon = {},
                         label = { Text(route::class.simpleName ?: "") },
@@ -69,15 +71,19 @@ fun MainScreen(topLevelBackStack: TopLevelBackStack<Route>) {
                         onBackClick = { topLevelBackStack.removeLast() }
                     )
                 }
-                entry<Faculties> {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(Color.LightGray),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("Faculties screen")
-                    }
+                entry<Favorites> {
+                    val favoritesViewModel: FavoritesViewModel = koinViewModel()
+                    FavoritesScreen(
+                        topLevelBackStack = topLevelBackStack,
+                        viewModel = favoritesViewModel
+                    )
+                }
+                entry<Settings> {
+                    val viewModel: SettingsViewModel = koinViewModel()
+                    SettingsScreen(
+                        onBackClick = { topLevelBackStack.removeLast() },
+                        viewModel = viewModel
+                    )
                 }
             }
         )

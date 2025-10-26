@@ -4,9 +4,11 @@ import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import ru.hopenz.pratcticandroid.gp.data.mapper.CharacterResponseToUiMapper
 import ru.hopenz.pratcticandroid.gp.data.repository.CharacterRepository
+import ru.hopenz.pratcticandroid.gp.data.repository.FavoritesRepository
 import ru.hopenz.pratcticandroid.gp.domain.usecase.GetCharactersUseCase
 import ru.hopenz.pratcticandroid.gp.presentation.viewModel.CharacterDetailsViewModel
 import ru.hopenz.pratcticandroid.gp.presentation.viewModel.CharacterListViewModel
+import ru.hopenz.pratcticandroid.gp.presentation.viewModel.FavoritesViewModel
 
 
 val potterFeatureModule = module {
@@ -14,7 +16,12 @@ val potterFeatureModule = module {
     single { CharacterRepository(get(), get()) }
     single { GetCharactersUseCase(get()) }
 
-    viewModel { CharacterListViewModel(get()) }
+    single { FavoritesRepository(get()) }
+
+    viewModel { FavoritesViewModel(get()) }
+
+    viewModel { CharacterListViewModel(get(), settingsDataStore = get()) }
+
     viewModel { (characterIndex: Int) ->
         CharacterDetailsViewModel(
             topLevelBackStack = get(),

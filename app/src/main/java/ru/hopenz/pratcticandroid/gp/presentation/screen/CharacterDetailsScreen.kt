@@ -1,5 +1,6 @@
 package ru.hopenz.pratcticandroid.gp.presentation.screen
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,6 +10,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +21,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,21 +34,32 @@ import com.bumptech.glide.integration.compose.ExperimentalGlideComposeApi
 import com.bumptech.glide.integration.compose.GlideImage
 import org.koin.androidx.compose.koinViewModel
 import org.koin.core.parameter.parametersOf
+import ru.hopenz.pratcticandroid.gp.data.local.FavoriteEntity
 import ru.hopenz.pratcticandroid.gp.presentation.model.CharacterDetailsViewState
 import ru.hopenz.pratcticandroid.gp.presentation.viewModel.CharacterDetailsViewModel
+import ru.hopenz.pratcticandroid.gp.presentation.viewModel.FavoritesViewModel
 import ru.hopenz.pratcticandroid.uikit.FullscreenError
 import ru.hopenz.pratcticandroid.uikit.FullscreenLoading
 import ru.hopenz.pratcticandroid.uikit.FullscreenMessage
 import ru.hopenz.pratcticandroid.uikit.RatingBar
 
+@SuppressLint("UnrememberedMutableState")
 @Composable
 fun CharacterDetailsScreen(
     characterIndex: Int,
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    favoritesViewModel: FavoritesViewModel = koinViewModel()
 ) {
     key(characterIndex) {
         val viewModel: CharacterDetailsViewModel = koinViewModel { parametersOf(characterIndex) }
         val state by viewModel.state.collectAsState()
+        val favorites by favoritesViewModel.favorites.collectAsState()
+
+        val isFavorite by if (state.character != null) {
+            favoritesViewModel.isFavoriteFlow(state.character!!.id).collectAsState()
+        } else {
+            mutableStateOf(false)
+        }
 
         LaunchedEffect(characterIndex) {
             viewModel.loadCharacter(characterIndex)
@@ -61,7 +76,23 @@ fun CharacterDetailsScreen(
                 modifier = Modifier.fillMaxSize(),
                 onRatingChanged = viewModel::onRatingChanged,
                 onRetry = { viewModel.loadCharacter(characterIndex) },
-                onBackClick = onBackClick
+                onBackClick = onBackClick,
+                isFavorite = isFavorite,
+                onFavoriteClick = {
+                    state.character?.let { character ->
+                        if (isFavorite) {
+                            favoritesViewModel.removeFavorite(character.id)
+                        } else {
+                            favoritesViewModel.addFavorite(
+                                FavoriteEntity(
+                                    id = character.id,
+                                    name = character.fullName,
+                                    house = character.hogwartsHouse
+                                )
+                            )
+                        }
+                    }
+                }
             )
         }
     }
@@ -74,32 +105,21 @@ fun CharacterDetailsContent(
     modifier: Modifier = Modifier,
     onRatingChanged: (Float) -> Unit = {},
     onRetry: () -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    isFavorite: Boolean = false,
+    onFavoriteClick: () -> Unit = {}
 ) {
     when {
-        state.isLoading -> {
-            FullscreenLoading()
-        }
-
-        state.error != null -> {
-            FullscreenError(
-                retry = onRetry,
-                text = state.error
-            )
-        }
-
-        state.character == null -> {
-            FullscreenMessage("Персонаж не найден")
-        }
-
-        else -> {
-            CharacterDetailsLoadedContent(
-                state = state,
-                modifier = modifier,
-                onRatingChanged = onRatingChanged,
-                onBackClick = onBackClick
-            )
-        }
+        state.isLoading -> FullscreenLoading()
+        state.error != null -> FullscreenError(retry = onRetry, text = state.error)
+        state.character == null -> FullscreenMessage("Персонаж не найден")
+        else -> CharacterDetailsLoadedContent(
+            state = state,
+            isFavorite = isFavorite,
+            onRatingChanged = onRatingChanged,
+            onBackClick = onBackClick,
+            onFavoriteClick = onFavoriteClick
+        )
     }
 }
 
@@ -107,13 +127,18 @@ fun CharacterDetailsContent(
 @Composable
 fun CharacterDetailsLoadedContent(
     state: CharacterDetailsViewState,
-    modifier: Modifier = Modifier,
+    isFavorite: Boolean,
     onRatingChanged: (Float) -> Unit = {},
-    onBackClick: () -> Unit = {}
+    onBackClick: () -> Unit = {},
+    onFavoriteClick: () -> Unit = {}
 ) {
     state.character?.let { character ->
-        ConstraintLayout(modifier = modifier.padding(16.dp)) {
-            val (backButton, avatar, name, infoColumn, ratingBarBox) = createRefs()
+        ConstraintLayout(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
+        ) {
+            val (backButton, favoriteButton, avatar, name, infoColumn, ratingBarBox) = createRefs()
 
             IconButton(
                 onClick = onBackClick,
@@ -123,9 +148,23 @@ fun CharacterDetailsLoadedContent(
                 }
             ) {
                 Icon(
-                    imageVector = Icons.Default.ArrowBack,
+                    Icons.Default.ArrowBack,
                     contentDescription = "Back",
                     tint = MaterialTheme.colorScheme.onSurface
+                )
+            }
+
+            IconButton(
+                onClick = onFavoriteClick,
+                modifier = Modifier.constrainAs(favoriteButton) {
+                    top.linkTo(backButton.top)
+                    end.linkTo(parent.end)
+                }
+            ) {
+                Icon(
+                    imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    contentDescription = "Favorite",
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -174,7 +213,7 @@ fun CharacterDetailsLoadedContent(
 
             Box(
                 modifier = Modifier.constrainAs(ratingBarBox) {
-                    bottom.linkTo(parent.bottom)
+                    bottom.linkTo(parent.bottom, margin = 16.dp)
                     start.linkTo(parent.start)
                     end.linkTo(parent.end)
                 },
