@@ -99,5 +99,14 @@ dependencies {
 
     // Kotlin Metadata (фикс ошибки kapt)
     implementation("org.jetbrains.kotlinx:kotlinx-metadata-jvm:0.6.0")
+
+    implementation("androidx.activity:activity-ktx:1.9.3")
+    implementation("com.google.accompanist:accompanist-permissions:0.36.0")
+    implementation("io.coil-kt:coil:2.6.0")
+    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("androidx.core:core:1.13.1")
+    implementation("androidx.documentfile:documentfile:1.0.1")
+    implementation("io.insert-koin:koin-androidx-compose:3.5.3")
+    implementation("io.insert-koin:koin-androidx-compose:3.7.2")
 }
 
