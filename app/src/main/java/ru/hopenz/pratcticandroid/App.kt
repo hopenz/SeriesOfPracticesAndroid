@@ -9,6 +9,7 @@ import ru.hopenz.pratcticandroid.di.databaseModule
 import ru.hopenz.pratcticandroid.di.mainModule
 import ru.hopenz.pratcticandroid.di.networkModules
 import ru.hopenz.pratcticandroid.di.potterFeatureModule
+import ru.hopenz.pratcticandroid.di.profileModule
 import ru.hopenz.pratcticandroid.di.viewModelModule
 
 class App : Application() {
@@ -23,7 +24,8 @@ class App : Application() {
                 potterFeatureModule,
                 dataStoreModule,
                 viewModelModule,
-                databaseModule
+                databaseModule,
+                profileModule
             )
         }
     }

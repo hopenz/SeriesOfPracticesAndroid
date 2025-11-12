@@ -2,6 +2,7 @@ package ru.hopenz.pratcticandroid.gp.presentation.viewModel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
@@ -25,8 +26,18 @@ class CharacterListViewModel(
     private val mutableHasSettings = MutableStateFlow(false)
     val hasSettings = mutableHasSettings.asStateFlow()
 
+    private val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+        val errorMessage = when (throwable) {
+            is UnknownHostException -> "Нет подключения к интернету"
+            is SocketTimeoutException -> "Превышено время ожидания ответа"
+            is IOException -> "Ошибка сети"
+            else -> throwable.message ?: "Ошибка загрузки"
+        }
+        mutableState.value = CharacterListViewState(CharacterListViewState.State.Error(errorMessage))
+    }
+
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(exceptionHandler) {
             settingsDataStore.filtersFlow.collect { filters ->
                 mutableHasSettings.value = hasNonDefaultSettings(filters)
                 loadCharactersInternal(filters)
@@ -35,7 +46,7 @@ class CharacterListViewModel(
     }
 
     fun loadCharacters(lang: String = "en") {
-        viewModelScope.launch {
+        viewModelScope.launch(exceptionHandler) {
             val filters = settingsDataStore.filtersFlow.first()
             mutableHasSettings.value = hasNonDefaultSettings(filters)
             loadCharactersInternal(filters, lang)
@@ -44,41 +55,24 @@ class CharacterListViewModel(
 
     private suspend fun loadCharactersInternal(filters: FilterSettings, lang: String = "en") {
         mutableState.value = CharacterListViewState(CharacterListViewState.State.Loading)
-        try {
-            val all = getCharactersUseCase(lang)
 
-            val filtered = all.filter { character ->
-                val matchesSurname =
-                    filters.surname.isBlank() ||
-                            character.fullName.contains(filters.surname, ignoreCase = true)
+        val all = getCharactersUseCase(lang)
 
-                val matchesHouse =
-                    filters.house.isNullOrBlank() ||
-                            (character.hogwartsHouse?.equals(filters.house, ignoreCase = true)
-                                ?: false)
+        val filtered = all.filter { character ->
+            val matchesSurname =
+                filters.surname.isBlank() ||
+                        character.fullName.contains(filters.surname, ignoreCase = true)
 
-                matchesSurname && matchesHouse
-            }
+            val matchesHouse =
+                filters.house.isNullOrBlank() ||
+                        (character.hogwartsHouse?.equals(filters.house, ignoreCase = true)
+                            ?: false)
 
-            mutableState.value =
-                CharacterListViewState(CharacterListViewState.State.Success(filtered))
-        } catch (e: UnknownHostException) {
-            mutableState.value =
-                CharacterListViewState(CharacterListViewState.State.Error("Нет подключения к интернету"))
-        } catch (e: SocketTimeoutException) {
-            mutableState.value =
-                CharacterListViewState(CharacterListViewState.State.Error("Превышено время ожидания ответа"))
-        } catch (e: IOException) {
-            mutableState.value =
-                CharacterListViewState(CharacterListViewState.State.Error("Ошибка сети"))
-        } catch (e: Exception) {
-            mutableState.value =
-                CharacterListViewState(
-                    CharacterListViewState.State.Error(
-                        e.message ?: "Ошибка загрузки"
-                    )
-                )
+            matchesSurname && matchesHouse
         }
+
+        mutableState.value =
+            CharacterListViewState(CharacterListViewState.State.Success(filtered))
     }
 
     private fun hasNonDefaultSettings(filters: FilterSettings): Boolean {

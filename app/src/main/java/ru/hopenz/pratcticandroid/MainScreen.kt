@@ -1,7 +1,15 @@
 package ru.hopenz.pratcticandroid
 
+import android.os.Build
+import androidx.annotation.RequiresApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
@@ -25,11 +33,17 @@ import ru.hopenz.pratcticandroid.gp.presentation.viewModel.FavoritesViewModel
 import ru.hopenz.pratcticandroid.gp.presentation.viewModel.SettingsViewModel
 import ru.hopenz.pratcticandroid.navigation.CharacterDetails
 import ru.hopenz.pratcticandroid.navigation.Characters
+import ru.hopenz.pratcticandroid.navigation.EditProfile
 import ru.hopenz.pratcticandroid.navigation.Favorites
+import ru.hopenz.pratcticandroid.navigation.Profile
 import ru.hopenz.pratcticandroid.navigation.Route
 import ru.hopenz.pratcticandroid.navigation.Settings
 import ru.hopenz.pratcticandroid.navigation.TopLevelBackStack
+import ru.hopenz.pratcticandroid.profile.presentation.screen.EditProfileScreen
+import ru.hopenz.pratcticandroid.profile.presentation.screen.ProfileScreen
+import kotlin.collections.forEach
 
+@RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(topLevelBackStack: TopLevelBackStack<Route>) {
@@ -38,10 +52,17 @@ fun MainScreen(topLevelBackStack: TopLevelBackStack<Route>) {
     Scaffold(
         bottomBar = {
             NavigationBar(containerColor = Color.White) {
-                listOf(Characters, Favorites).forEach { route ->
+                listOf(Characters, Favorites, Profile).forEach { route ->
+                    val (icon, label) = when (route) {
+                        Characters -> Icons.Default.Home to "Главная"
+                        Favorites -> Icons.Default.Favorite to "Избранное"
+                        Profile -> Icons.Default.Person to "Профиль"
+                        else -> Icons.Default.Home to "Другое"
+                    }
+
                     NavigationBarItem(
-                        icon = {},
-                        label = { Text(route::class.simpleName ?: "") },
+                        icon = { Icon(icon, contentDescription = label) },
+                        label = { Text(label) },
                         selected = topLevelBackStack.topLevelKey == route,
                         onClick = { topLevelBackStack.addTopLevel(route) }
                     )
@@ -52,37 +73,40 @@ fun MainScreen(topLevelBackStack: TopLevelBackStack<Route>) {
         NavDisplay(
             backStack = topLevelBackStack.backStack,
             onBack = { topLevelBackStack.removeLast() },
-            modifier = Modifier.padding(padding),
+            modifier = Modifier
+                .padding(padding)
+                .background(Color.White),
             sceneStrategy = dialogStrategy,
             entryProvider = entryProvider {
+
                 entry<Characters> {
-                    val viewModel: CharacterListViewModel = koinViewModel()
-                    CharacterListScreen(
-                        topLevelBackStack = topLevelBackStack,
-                        viewModel = viewModel
-                    )
+                    CharacterListScreen(topLevelBackStack = topLevelBackStack)
                 }
-                entry<CharacterDetails> {
-                    val route = it as CharacterDetails
-                    val viewModel: CharacterDetailsViewModel =
-                        koinViewModel { parametersOf(route.characterId) }
-                    CharacterDetailsScreen(
-                        characterIndex = route.characterId,
+
+                entry<Favorites> {
+                    FavoritesScreen(topLevelBackStack = topLevelBackStack)
+                }
+
+                entry<Profile> {
+                    ProfileScreen(topLevelBackStack = topLevelBackStack)
+                }
+
+                entry<EditProfile> {
+                    EditProfileScreen(
+                        topLevelBackStack = topLevelBackStack,
                         onBackClick = { topLevelBackStack.removeLast() }
                     )
                 }
-                entry<Favorites> {
-                    val favoritesViewModel: FavoritesViewModel = koinViewModel()
-                    FavoritesScreen(
-                        topLevelBackStack = topLevelBackStack,
-                        viewModel = favoritesViewModel
-                    )
-                }
+
                 entry<Settings> {
-                    val viewModel: SettingsViewModel = koinViewModel()
-                    SettingsScreen(
-                        onBackClick = { topLevelBackStack.removeLast() },
-                        viewModel = viewModel
+                    SettingsScreen(onBackClick = { topLevelBackStack.removeLast() })
+                }
+
+                entry<CharacterDetails> {
+                    val route = it as CharacterDetails
+                    CharacterDetailsScreen(
+                        characterIndex = route.characterId,
+                        onBackClick = { topLevelBackStack.removeLast() }
                     )
                 }
             }
