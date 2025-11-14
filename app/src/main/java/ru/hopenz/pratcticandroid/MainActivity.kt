@@ -12,8 +12,9 @@ import ru.hopenz.pratcticandroid.navigation.Route
 import ru.hopenz.pratcticandroid.navigation.TopLevelBackStack
 import ru.hopenz.pratcticandroid.ui.theme.PratcticAndroidTheme
 
+
 class MainActivity : ComponentActivity(), KoinComponent {
-    @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()

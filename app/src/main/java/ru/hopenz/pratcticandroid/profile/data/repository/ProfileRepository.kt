@@ -18,6 +18,7 @@ class ProfileRepository(private val context: Context) {
         val AVATAR_URI = stringPreferencesKey("profile_avatar_uri")
         val RESUME_URL = stringPreferencesKey("profile_resume_url")
         val POSITION = stringPreferencesKey("profile_position")
+        val FAVORITE_PAIR_TIME = stringPreferencesKey("profile_favorite_pair_time") // новое поле
     }
 
     val profileFlow: Flow<Profile> = ds.data.map { prefs ->
@@ -25,16 +26,18 @@ class ProfileRepository(private val context: Context) {
             fullName = prefs[Keys.FULL_NAME] ?: "",
             avatarUri = prefs[Keys.AVATAR_URI],
             resumeUrl = prefs[Keys.RESUME_URL],
-            position = prefs[Keys.POSITION]
+            position = prefs[Keys.POSITION],
+            favoritePairTime = prefs[Keys.FAVORITE_PAIR_TIME] // новое поле
         )
     }
 
     suspend fun saveProfile(profile: Profile) {
         ds.edit { prefs ->
             prefs[Keys.FULL_NAME] = profile.fullName
-            prefs[Keys.AVATAR_URI] = profile.avatarUri.toString()
-            prefs[Keys.RESUME_URL] = profile.resumeUrl.toString()
+            prefs[Keys.AVATAR_URI] = profile.avatarUri ?: ""
+            prefs[Keys.RESUME_URL] = profile.resumeUrl ?: ""
             prefs[Keys.POSITION] = profile.position ?: ""
+            prefs[Keys.FAVORITE_PAIR_TIME] = profile.favoritePairTime ?: "" // сохранение нового поля
         }
     }
 

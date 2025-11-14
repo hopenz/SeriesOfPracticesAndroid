@@ -1,6 +1,6 @@
 package ru.hopenz.pratcticandroid.di
 
-import org.koin.core.module.dsl.viewModel
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.dsl.module
 import ru.hopenz.pratcticandroid.profile.data.repository.ProfileRepository
 import ru.hopenz.pratcticandroid.profile.presentation.viewModel.ProfileViewModel
