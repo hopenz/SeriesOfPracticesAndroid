@@ -57,10 +57,7 @@ fun ProfileScreen(
             Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                 if (profile.avatarUri != null) {
                     AsyncImage(
-                        model = ImageRequest.Builder(ctx)
-                            .data(profile.avatarUri)
-                            .crossfade(true)
-                            .build(),
+                        model = profile.avatarUri,
                         contentDescription = "Avatar",
                         modifier = Modifier
                             .size(120.dp)
@@ -91,15 +88,17 @@ fun ProfileScreen(
             Text("Должность", style = MaterialTheme.typography.labelMedium)
             Text(profile.position ?: "Не указана", style = MaterialTheme.typography.bodyMedium)
 
+            Spacer(Modifier.height(8.dp))
+
+            Text("Время любимой пары", style = MaterialTheme.typography.labelMedium)
+            Text(profile.favoritePairTime ?: "Не установлено", style = MaterialTheme.typography.bodyMedium)
+
             Spacer(Modifier.height(16.dp))
 
             Button(onClick = {
                 viewModel.openResume(profile.resumeUrl,
                     onError = { msg -> Toast.makeText(ctx, msg, Toast.LENGTH_SHORT).show() },
                     openIntent = { intent ->
-                        if (profile.resumeUrl?.startsWith("http") == true) {
-                            startDownload(ctx, profile.resumeUrl!!)
-                        }
                         try {
                             ctx.startActivity(intent)
                         } catch (t: Exception) {
@@ -110,17 +109,5 @@ fun ProfileScreen(
                 Text("Резюме")
             }
         }
-    }
-}
-
-private fun startDownload(context: Context, url: String) {
-    try {
-        val dm = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        val request = DownloadManager.Request(Uri.parse(url))
-            .setAllowedNetworkTypes(DownloadManager.Request.NETWORK_WIFI or DownloadManager.Request.NETWORK_MOBILE)
-            .setTitle("Загрузка резюме")
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-        dm.enqueue(request)
-    } catch (_: Throwable) {
     }
 }

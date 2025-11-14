@@ -28,6 +28,13 @@ class ProfileViewModel(
         viewModelScope.launch { repo.updateAvatar(uriString) }
     }
 
+    fun setFavoritePairTime(time: String?) {
+        viewModelScope.launch {
+            val currentProfile = profile.value
+            repo.saveProfile(currentProfile.copy(favoritePairTime = time))
+        }
+    }
+
     fun openResume(resumeUrl: String?, onError: (String) -> Unit, openIntent: (Intent) -> Unit) {
         if (resumeUrl.isNullOrBlank()) {
             onError("Ссылка на резюме не указана")
